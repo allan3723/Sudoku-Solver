@@ -25,9 +25,19 @@ class Table
 };
 
 int emptyCellCount = 0;
+int areaZero[] = {0, 1, 2, 9, 10, 11, 18, 19, 20}, //3x3 grids
+    areaOne[] = {3, 4, 5, 12, 13, 14, 21, 22, 23},
+    areaTwo[] = {6, 7, 8, 15, 16, 17, 24, 25, 26},
+    areaThree[] = {27, 28, 29, 36, 37, 38, 45, 46, 47},
+    areaFour[] = {30, 31, 32, 39, 40, 41, 48, 49, 50},
+    areaFive[] = {33, 34, 35, 42, 43, 44, 51, 52, 53},
+    areaSix[] = {54, 55, 56, 63, 64, 65, 72, 73, 74},
+    areaSeven[] = {57, 58, 59, 66, 67, 68, 75, 76, 77},
+    areaEight[] = {60, 61, 62, 69, 70, 71, 78, 79, 80};
 void read_input();
 void setSeen(Table* puzzle, int i);
 bool findDecidableCell(Table* puzzle);
+bool hiddenSingles(Table* puzzle, int cell);
 void printTable(Table* puzzle);
 
 int main()
@@ -49,7 +59,7 @@ void read_input()
   {
     if (!isdigit(inp[i]) && inp[i] != '.' && inp[i] == '0')
     {
-      cout << "ERROR: expected {value} got " << inp[i] << endl;
+      cout << "ERROR: expected <value> got " << inp[i] << endl;
       exit(1);
     }
     
@@ -107,25 +117,14 @@ void read_input()
       setSeen(puzzle,i);
   }
 
-  if (emptyCellCount == 0)
+//  if (emptyCellCount == 0)
     printTable(puzzle);
 }
 
 void setSeen(Table* puzzle, int i)
 {
-  int areaZero[] = {0, 1, 2, 9, 10, 11, 18, 19, 20},
-      areaOne[] = {3, 4, 5, 12, 13, 14, 21, 22, 23},
-      areaTwo[] = {6, 7, 8, 15, 16, 17, 24, 25, 26},
-      areaThree[] = {27, 28, 29, 36, 37, 38, 45, 46, 47},
-      areaFour[] = {30, 31, 32, 39, 40, 41, 48, 49, 50},
-      areaFive[] = {33, 34, 35, 42, 43, 44, 51, 52, 53},
-      areaSix[] = {54, 55, 56, 63, 64, 65, 72, 73, 74},
-      areaSeven[] = {57, 58, 59, 66, 67, 68, 75, 76, 77},
-      areaEight[] = {60, 61, 62, 69, 70, 71, 78, 79, 80},
-      j;
+  int j;
 
-//      for (i = 0; i < 81; i++)
-//      {
         if (!isdigit(puzzle[i].num))
         {
           for (j = 1; j < 10; j++)
@@ -174,7 +173,6 @@ void setSeen(Table* puzzle, int i)
               break;
           }        
         }
-//      }
 }
 
 bool findDecidableCell(Table* puzzle)
@@ -184,7 +182,7 @@ bool findDecidableCell(Table* puzzle)
 
   for (i = 0; i < 81; i++)
   {
-    if (puzzle[i].choice.size() == 1)
+    if (puzzle[i].choice.size() == 1) //hidden single
     {
       it = puzzle[i].choice.begin();
       puzzle[i].num = *it;
@@ -192,10 +190,264 @@ bool findDecidableCell(Table* puzzle)
       emptyCellCount--;
       return true;
     }
-  }
+
+    else
+      if (puzzle[i].choice.size() > 1)
+        if(hiddenSingles(puzzle, i) == true)
+          return true;
+  } //end for
 
   return false;
 }
+
+bool hiddenSingles(Table* puzzle, int cell)
+{
+  int i, j;
+  set<char>::iterator it;
+  set<char>::iterator sec;
+  bool repeat = false;
+
+  for (it = puzzle[cell].choice.begin(); it != puzzle[cell].choice.end(); it++)
+  {
+    for (i = 1; ((cell + i) < 81) && puzzle[cell + i].row == puzzle[cell].row; i++)
+    {
+      for(sec = puzzle[cell + i].choice.begin(); sec != puzzle[cell + i].choice.end(); sec++)
+      {
+        if (*sec == *it)
+        {
+          repeat = true;
+          break;
+        } //if
+        
+        if (repeat == true)
+          break;
+      } //for
+    } //for
+
+    for (i = 1; ((cell - i) > 0) && puzzle[cell - i].row == puzzle[cell].row; i++)
+    {
+      for(sec = puzzle[cell - i].choice.begin(); sec != puzzle[cell - i].choice.end(); sec++)
+      {
+        if (*sec == *it)
+        {
+          repeat = true;
+          break;
+        } //if
+
+        if (repeat == true)
+          break;
+      } //for
+    } //for -- ROW BACKWARDS
+
+    if (repeat == false)
+    {
+      puzzle[cell].num = *it;
+      puzzle[cell].choice.clear();
+      emptyCellCount--;
+      return true;
+    }
+    else
+      repeat = false; //no H.S in row so check col
+
+    for(i = 1; (cell + (i * 9)) < 81; i++)
+    {
+      for(sec = puzzle[cell + (i * 9)].choice.begin(); sec != puzzle[cell + (i * 9)].choice.end(); sec++)
+      {
+        if (*sec == *it)
+        {
+          repeat = true;
+          break;
+        } //if
+
+        if (repeat == true)
+          break;
+      } //for
+    } //for - COL FORWARD
+
+    for (i = 1; (cell - (i * 9)) > 0; i++)
+    {
+      for(sec = puzzle[cell - (i * 9)].choice.begin(); sec != puzzle[cell - (i * 9)].choice.end(); sec++)
+      {
+        if (*sec == *it)
+        {
+          repeat = true;
+          break;
+        }
+
+        if (repeat == true)
+          break;
+      } // for 
+    } //for - COL BACKWARDS
+
+    if (repeat == false)
+    {
+      puzzle[cell].num = *it;
+      puzzle[cell].choice.clear();
+      emptyCellCount--;
+      return true;
+    }
+    else
+      repeat = false; //no H.S. in col so check unit
+
+    switch(puzzle[cell].area)
+    {
+      case 0:
+        for (i = 0; i < 9; i++)
+        {
+          if (cell == areaZero[i])
+            continue;
+          else
+            for (sec = puzzle[areaZero[i]].choice.begin(); sec != puzzle[areaZero[i]].choice.end(); sec++)
+              if (*it == *sec)
+              {
+                repeat = true;
+                break;
+              }
+          if (repeat == true)
+            break;
+        } //for
+          break;
+      case 1:
+        for (i = 0; i < 9; i++)
+        {
+          if (cell == areaOne[i])
+            continue;
+          else
+            for (sec = puzzle[areaOne[i]].choice.begin(); sec != puzzle[areaOne[i]].choice.end(); sec++)
+              if (*it == *sec)
+              {
+                repeat = true;
+                break;
+              }
+          if (repeat == true)
+            break;
+        } //for
+          break;
+      case 2:
+        for (i = 0; i < 9; i++)
+        {
+          if (cell == areaTwo[i])
+            continue;
+          else
+            for (sec = puzzle[areaTwo[i]].choice.begin(); sec != puzzle[areaTwo[i]].choice.end(); sec++)
+              if (*it == *sec)
+              {
+                repeat = true;
+                break;
+              }
+          if (repeat == true)
+            break;
+        } //for
+          break;
+      case 3:
+        for (i = 0; i < 9; i++)
+        {
+          if (cell == areaThree[i])
+            continue;
+          else
+            for (sec = puzzle[areaThree[i]].choice.begin(); sec != puzzle[areaThree[i]].choice.end(); sec++)
+              if (*it == *sec)
+              {
+                repeat = true;
+                break;
+              }
+          if (repeat == true)
+            break;
+        } //for
+          break;
+      case 4:
+        for (i = 0; i < 9; i++)
+        {
+          if (cell == areaFour[i])
+            continue;
+          else
+            for (sec = puzzle[areaFour[i]].choice.begin(); sec != puzzle[areaFour[i]].choice.end(); sec++)
+              if (*it == *sec)
+              {
+                repeat = true;
+                break;
+              }
+          if (repeat == true)
+            break;
+        } //for
+          break;
+      case 5:
+        for (i = 0; i < 9; i++)
+        {
+          if (cell == areaFive[i])
+            continue;
+          else
+            for (sec = puzzle[areaFive[i]].choice.begin(); sec != puzzle[areaFive[i]].choice.end(); sec++)
+              if (*it == *sec)
+              {
+                repeat = true;
+                break;
+              }
+          if (repeat == true)
+            break;
+        } //for
+          break;
+      case 6:
+        for (i = 0; i < 9; i++)
+        {
+          if (cell == areaSix[i])
+            continue;
+          else
+            for (sec = puzzle[areaSix[i]].choice.begin(); sec != puzzle[areaSix[i]].choice.end(); sec++)
+              if (*it == *sec)
+              {
+                repeat = true;
+                break;
+              }
+          if (repeat == true)
+            break;
+        } //for
+          break;
+      case 7:
+        for (i = 0; i < 9; i++)
+        {
+          if (cell == areaSeven[i])
+            continue;
+          else
+            for (sec = puzzle[areaSeven[i]].choice.begin(); sec != puzzle[areaSeven[i]].choice.end(); sec++)
+              if (*it == *sec)
+              {
+                repeat = true;
+                break;
+              }
+          if (repeat == true)
+            break;
+        } //for
+          break;
+      case 8:
+        for (i = 0; i < 9; i++)
+        {
+          if (cell == areaEight[i])
+            continue;
+          else
+            for (sec = puzzle[areaEight[i]].choice.begin(); sec != puzzle[areaEight[i]].choice.end(); sec++)
+              if (*it == *sec)
+              {
+                repeat = true;
+                break;
+              }
+          if (repeat == true)
+            break;
+        } //for
+          break;
+    }        
+
+    if (repeat == false)
+    {
+      puzzle[cell].num = *it;
+      puzzle[cell].choice.clear();
+      emptyCellCount--;
+      return true;
+    }
+  } //for - THE WHOLE FOR
+
+  return false;
+} //end function
 
 void printTable(Table* puzzle)
 {
