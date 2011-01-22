@@ -1,5 +1,6 @@
 // ache; Cheng, Allan
 
+#include <stack>
 #include <iostream>
 #include <set>
 using namespace std;
@@ -16,7 +17,7 @@ class Table
   char num;
   set<char> choice;
 
-  void print()
+  void print() //temporary - use to print out possibilities
   { 
     for (i = choice.begin(); i != choice.end(); i++)
       cout << " " << *i;
@@ -24,7 +25,7 @@ class Table
   }
 };
 
-int emptyCellCount = 0;
+set<int> emptyCell;
 int areaZero[] = {0, 1, 2, 9, 10, 11, 18, 19, 20}, //3x3 grids
     areaOne[] = {3, 4, 5, 12, 13, 14, 21, 22, 23},
     areaTwo[] = {6, 7, 8, 15, 16, 17, 24, 25, 26},
@@ -38,6 +39,7 @@ void read_input();
 void setSeen(Table* puzzle, int i);
 bool findDecidableCell(Table* puzzle);
 bool hiddenSingles(Table* puzzle, int cell);
+void guess(Table* puzzle);
 void printTable(Table* puzzle);
 
 int main()
@@ -75,7 +77,7 @@ void read_input()
         puzzle[i].choice.insert('7');
         puzzle[i].choice.insert('8');
         puzzle[i].choice.insert('9');
-        emptyCellCount++;
+        emptyCell.insert(i);
     }
 
     j = i / 9;  // row number from row 0->8
@@ -111,13 +113,14 @@ void read_input()
   for (i = 0; i < 81; i++)
     setSeen(puzzle, i);
 
-  while (findDecidableCell(puzzle) == true && emptyCellCount != 0)
+  while ((findDecidableCell(puzzle) == true) && emptyCell.size() != 0)
   {
     for (i = 0; i < 81; i++)
       setSeen(puzzle,i);
   }
-
-//  if (emptyCellCount == 0)
+//  if (emptyCell.size() != 0)
+//    guess(puzzle);
+//  else
     printTable(puzzle);
 }
 
@@ -127,10 +130,17 @@ void setSeen(Table* puzzle, int i)
 
         if (!isdigit(puzzle[i].num))
         {
-          for (j = 1; j < 10; j++)
+          for (j = 0; j < 9; j++)
           {
             puzzle[i].choice.erase(puzzle[puzzle[i].col + (j*9)].num);
-            puzzle[i].choice.erase(puzzle[(puzzle[i].row * 9) + j - 1].num);   
+//if (i == 28)
+//{
+//cout << "col # = " << puzzle[puzzle[i].col + (j*9)].col << " - " << puzzle[i].col + (j*9) << "\t"; 
+//cout << "Erasing " << puzzle[puzzle[i].col + (j*9)].num << " and is left with " << puzzle[i].choice.size() << " choices\n";
+/*}*/            puzzle[i].choice.erase(puzzle[(puzzle[i].row * 9) + j].num);  
+ 
+//                if (i == 28 )//&& puzzle[puzzle[i].col + (j*9)].num != '.')
+//cout <<  puzzle[(puzzle[i].row * 9) + j - 1].num << " left w/ " << puzzle[i].choice.size() << endl;
           }
 
           switch(puzzle[i].area)
@@ -149,7 +159,10 @@ void setSeen(Table* puzzle, int i)
               break; 
             case 3:
               for (j = 0; j < 9; j++)
-                puzzle[i].choice.erase(puzzle[areaThree[j]].num);
+//              {
+                puzzle[i].choice.erase(puzzle[areaThree[j]].num); //}
+//                if (i == 28 && puzzle[areaThree[j]].num != '.')
+//cout << "Erasing " << puzzle[areaThree[j]].num << " and is left with " << puzzle[i].choice.size() << " choices" << endl;}
               break;
             case 4:
               for (j = 0; j < 9; j++)
@@ -187,7 +200,7 @@ bool findDecidableCell(Table* puzzle)
       it = puzzle[i].choice.begin();
       puzzle[i].num = *it;
       puzzle[i].choice.clear();
-      emptyCellCount--;
+      emptyCell.erase(i);
       return true;
     }
 
@@ -243,7 +256,7 @@ bool hiddenSingles(Table* puzzle, int cell)
     {
       puzzle[cell].num = *it;
       puzzle[cell].choice.clear();
-      emptyCellCount--;
+      emptyCell.erase(cell);
       return true;
     }
     else
@@ -283,7 +296,7 @@ bool hiddenSingles(Table* puzzle, int cell)
     {
       puzzle[cell].num = *it;
       puzzle[cell].choice.clear();
-      emptyCellCount--;
+      emptyCell.erase(cell);
       return true;
     }
     else
@@ -441,13 +454,33 @@ bool hiddenSingles(Table* puzzle, int cell)
     {
       puzzle[cell].num = *it;
       puzzle[cell].choice.clear();
-      emptyCellCount--;
+      emptyCell.erase(cell);
       return true;
     }
   } //for - THE WHOLE FOR
 
   return false;
 } //end function
+
+void guess(Table* puzzle)
+{
+  set<int>::iterator it;
+  int cell, size;
+
+  cell = *(emptyCell.begin());
+  size = puzzle[cell].choice.size();
+
+//  cout << puzzle[*emptyCell.begin()].choice.size() << endl;
+//  cout << puzzle[*emptyCell.begin()].num << endl;
+  for (it = emptyCell.begin()++; it != emptyCell.end(); it++)
+  {
+    if (puzzle[*it].choice.size() < size) //look for cell with least poss
+    {
+      size = puzzle[*it].choice.size();
+      cell = *it;
+    }
+  } //for
+} //end guess
 
 void printTable(Table* puzzle)
 {
