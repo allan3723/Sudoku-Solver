@@ -26,6 +26,7 @@ class Table
 };
 
 set<int> emptyCell;
+bool solutionFound = false;
 int areaZero[] = {0, 1, 2, 9, 10, 11, 18, 19, 20}, //3x3 grids
     areaOne[] = {3, 4, 5, 12, 13, 14, 21, 22, 23},
     areaTwo[] = {6, 7, 8, 15, 16, 17, 24, 25, 26},
@@ -37,6 +38,7 @@ int areaZero[] = {0, 1, 2, 9, 10, 11, 18, 19, 20}, //3x3 grids
     areaEight[] = {60, 61, 62, 69, 70, 71, 78, 79, 80};
 void read_input();
 void setSeen(Table* puzzle, int i);
+void findSimplifications(Table* puzzle);
 bool findDecidableCell(Table* puzzle);
 bool hiddenSingles(Table* puzzle, int cell);
 void guess(Table* puzzle);
@@ -106,9 +108,15 @@ void read_input()
   temp = fgetc(stdin);
   if (!feof(stdin))
   {
-    cout << "ERROR: expected EOF got " << temp << endl;
+    cout << "ERROR: expected <eof> got " << temp << endl;
     exit(1);
   }
+
+  findSimplifications(puzzle);
+}
+void findSimplifications(Table* puzzle)
+{
+  int i;
 
   for (i = 0; i < 81; i++)
     setSeen(puzzle, i);
@@ -118,10 +126,14 @@ void read_input()
     for (i = 0; i < 81; i++)
       setSeen(puzzle,i);
   }
-//  if (emptyCell.size() != 0)
-//    guess(puzzle);
-//  else
+
+  if (emptyCell.size() != 0)
+    guess(puzzle);
+  else
+  {
+    solutionFound = true;
     printTable(puzzle);
+  }
 }
 
 void setSeen(Table* puzzle, int i)
@@ -133,14 +145,7 @@ void setSeen(Table* puzzle, int i)
           for (j = 0; j < 9; j++)
           {
             puzzle[i].choice.erase(puzzle[puzzle[i].col + (j*9)].num);
-//if (i == 28)
-//{
-//cout << "col # = " << puzzle[puzzle[i].col + (j*9)].col << " - " << puzzle[i].col + (j*9) << "\t"; 
-//cout << "Erasing " << puzzle[puzzle[i].col + (j*9)].num << " and is left with " << puzzle[i].choice.size() << " choices\n";
-/*}*/            puzzle[i].choice.erase(puzzle[(puzzle[i].row * 9) + j].num);  
- 
-//                if (i == 28 )//&& puzzle[puzzle[i].col + (j*9)].num != '.')
-//cout <<  puzzle[(puzzle[i].row * 9) + j - 1].num << " left w/ " << puzzle[i].choice.size() << endl;
+            puzzle[i].choice.erase(puzzle[(puzzle[i].row * 9) + j].num);  
           }
 
           switch(puzzle[i].area)
@@ -159,10 +164,7 @@ void setSeen(Table* puzzle, int i)
               break; 
             case 3:
               for (j = 0; j < 9; j++)
-//              {
-                puzzle[i].choice.erase(puzzle[areaThree[j]].num); //}
-//                if (i == 28 && puzzle[areaThree[j]].num != '.')
-//cout << "Erasing " << puzzle[areaThree[j]].num << " and is left with " << puzzle[i].choice.size() << " choices" << endl;}
+                puzzle[i].choice.erase(puzzle[areaThree[j]].num); 
               break;
             case 4:
               for (j = 0; j < 9; j++)
@@ -465,13 +467,27 @@ bool hiddenSingles(Table* puzzle, int cell)
 void guess(Table* puzzle)
 {
   set<int>::iterator it;
+  stack<Table*> alternatives;
+  stack<set<int> > mystack;
   int cell, size;
+  char temp;
 
+  if (emptyCell.size() == 0 && !alternatives.empty())
+  {
+    emptyCell = mystack.top();
+    mystack.pop();
+    puzzle = alternatives.top();
+    alternatives.pop();
+  }
+  else if (emptyCell.size() == 0 && alternatives.empty())
+  {
+    if (solutionFound = false) 
+      cout << "No solution!\n";
+    exit(1);
+  }
   cell = *(emptyCell.begin());
   size = puzzle[cell].choice.size();
 
-//  cout << puzzle[*emptyCell.begin()].choice.size() << endl;
-//  cout << puzzle[*emptyCell.begin()].num << endl;
   for (it = emptyCell.begin()++; it != emptyCell.end(); it++)
   {
     if (puzzle[*it].choice.size() < size) //look for cell with least poss
@@ -480,6 +496,26 @@ void guess(Table* puzzle)
       cell = *it;
     }
   } //for
+  temp = *(puzzle[cell].choice.begin());
+  puzzle[cell].choice.erase(temp);
+
+  if (puzzle[cell].choice.size() != 0)
+  {
+    alternatives.push(puzzle);
+    mystack.push(emptyCell);
+  }
+
+  puzzle[cell].num = temp;
+  puzzle[cell].choice.clear();
+  emptyCell.erase(cell);
+  findSimplifications(puzzle);
+
+  while (!alternatives.empty())
+  {
+    puzzle = alternatives.top();
+    alternatives.pop();
+    guess(puzzle);
+  }
 } //end guess
 
 void printTable(Table* puzzle)
