@@ -1,6 +1,5 @@
 // ache; Cheng, Allan
 
-#include <list>
 #include <stack>
 #include <iostream>
 #include <set>
@@ -8,30 +7,17 @@ using namespace std;
 #include <cctype>
 #include <stdlib.h>
 #include <stdio.h>
+#include <list>
 
 class Table
 {
   private:
     set<char>::iterator it;
-    Table* copy;
-    stack<char> numstack;
     int i;
   public:
   int row, col, area, count;
   char num;
   set<char> choice;
-
-  void push()
-  {
-  }
-
-  void pop()
-  {
-//    choice = choicestack.top();
-//    num = numstack.top();
-//    choicestack.pop();
-//    numstack.pop();
-  }
 
   void print() //temporary - use to print out possibilities
   { 
@@ -42,7 +28,6 @@ class Table
 };
 
 set<int> emptyCell;
-list<Table*> solutions;
 bool solutionFound = false;
 bool guessed = false;
 int areaZero[] = {0, 1, 2, 9, 10, 11, 18, 19, 20}, //3x3 grids
@@ -491,13 +476,13 @@ void guess(Table* puzzle)
 {
   set<int>::iterator it;
   stack <set<int> > empty;
+  list<Table*> test;
   set<char>::iterator cit;
   stack<Table> alternatives;
-  stack< set<char> > test;
   int cell, size, i = 0, j, k = 0, size2;
-  Table temp[81];
+
   guessed = true;
-printTable(puzzle);
+/*
   if (emptyCell.size() == 0 && !alternatives.empty()) //no alts, no cell to try anymore
   {
     if (solutionFound = false) //didn't find any solutions at all
@@ -507,7 +492,7 @@ printTable(puzzle);
     }
     return;
   }
-  
+ */ 
   size2 = emptyCell.size();
   int cells[size2];
 
@@ -520,15 +505,11 @@ printTable(puzzle);
   for (k = 0; k < size2; k++)
   {
     cell = cells[k];
-//cout << "cell = " << cell << endl;
     size = puzzle[cell].choice.size();
     char array[size];
 
-//cout << "puzzle[ce]].choice.size = " << puzzle[cell].choice.size() << endl;
-//cout << "cell = " << cell << endl;
-//printTable(puzzle);
-    if (puzzle[cell].choice.size() == 0) //not a solution so return;
-      return;
+    if (puzzle[cell].choice.size() == 0) //not a solution so try next;
+      continue;
 
     emptyCell.erase(cell);     //since current cell will be filled, erase from list.
     for (cit = puzzle[cell].choice.begin(); cit != puzzle[cell].choice.end(); cit++) //all poss of cell
@@ -537,37 +518,30 @@ printTable(puzzle);
       i++;
     } 
 
-    for (i = 0; i < size; i++)
+    for (i = 0; i < size; i++)      
     {
       empty.push(emptyCell);
-//cout << "on top, puzzle[0] = " << puzzle[0].num << endl;
-      for (j = 0; j < 81; j++)
-        alternatives.push(puzzle[j]); //saves the entire board
-//printTable(puzzle);
+//      for (j = 0; j < 81; j++)
+//        alternatives.push(puzzle[j]); //saves the entire board
+      test.push_back(puzzle);
       puzzle[cell].num = array[i];  // fills current pos in the empty cell
-//cout << "puzzle[cell].num = " << puzzle[cell].num << endl;
-//cout << "cell = " << cell << endl;
-//printTable(puzzle);
-//      puzzle[cell].choice.clear();
       findSimplifications(puzzle);  //tries to solve this guess
 
-      if (check(puzzle) == true)
+      if (check(puzzle))
       {
         for (k = 0; k < 81; k++)
           cout << puzzle[k].num;
         cout << endl;
       }
-        for (j = 80; j >= 0; j--)
-        {
-          puzzle[j] = alternatives.top();
-          alternatives.pop();
-        }
+//        for (j = 80; j >= 0; j--)
+//        {
+//          puzzle[j] = alternatives.top();
+//          alternatives.pop();
+//        }
+        puzzle = test.back();
+        test.pop_back(); 
         emptyCell = empty.top();
         empty.pop(); 
-//cout << "bottom, puzzle[50] = " << puzzle[50].num << endl;
-//cout << "# of choices = " << puzzle[50].choice.size() << endl;
-//cout << "# of emptys = " << emptyCell.size() << endl;
-//cout << "alternatives = " << alternatives.size() << endl;
     } //for
 
       emptyCell.insert(cell); //inserts back into empty list
@@ -587,20 +561,10 @@ bool check(Table* puzzle)
 void printTable(Table* puzzle)
 {
   int i;
-//  list<Table*>::iterator it;
-//  char *solution;
-
- // solutions.unique();
-//  cout << solutions.size() << endl;
-//  for (it = solutions.begin(); it != solutions.end(); it++) 
   {
     for (i = 0; i < 81; i++)
       cout << puzzle[i].num;
-//    solutions.pop_front();
-//  for (i = 0; i < 81; i++)
-//    cout << solutions.front(); 
   cout << endl;
-//  solutions.pop_front();
   } 
   
 }
