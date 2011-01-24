@@ -47,6 +47,7 @@ bool hiddenSingles(Table* puzzle, int cell);
 void guess(Table* puzzle);
 bool check(Table* puzzle);
 void printTable(Table* puzzle);
+bool guessCheck(Table* puzzle, int cell);
 
 int main()
 {
@@ -528,14 +529,13 @@ void guess(Table* puzzle)
       for (j = 0; j < size2; j++)
         alternatives.push(puzzle[cells[j]]); //saves the affected cells
       puzzle[cell].num = array[i];  // fills current pos in the empty cell
-      findSimplifications(puzzle);  //tries to solve this guess
-
-      if (emptyCell.size() == 0)
+      if(guessCheck(puzzle, cell))  //tries to solve this guess
       {
         for (k = 0; k < 81; k++)
           cout << puzzle[k].num;
         cout << endl;
       }
+
       for (j = size2-1; j >= 0; j--)
       {
         puzzle[cells[j]] = alternatives.top();
@@ -558,6 +558,112 @@ bool check(Table* puzzle)
     if (puzzle[i].num == '.' && puzzle[i].choice.size() == 0)
       return false;
   return true;
+}
+
+bool guessCheck(Table* puzzle, int cell)
+{
+  int j, count = 0;
+  bool simp = true;
+
+  while (simp == true)
+  {
+//cout << "count = " << count << endl;
+    for (j = 0; j < 9; j++)
+    {
+      if (puzzle[puzzle[cell].col + (j*9)].num == '.')
+      { 
+        setSeen(puzzle, puzzle[cell].col + (j*9));
+//cout << puzzle[cell].col + (j*9) << " - " << puzzle[puzzle[cell].col + (j*9)].choice.size() << endl;
+        if (puzzle[puzzle[cell].col + (j*9)].choice.size() == 0)
+          return false;
+      }
+
+      if (puzzle[puzzle[cell].row*9+j].num == '.')
+      {
+        setSeen(puzzle, puzzle[cell].row*9+j);
+//cout << puzzle[cell].row*9 + j << " - " << puzzle[puzzle[cell].row*9 + j].choice.size() << endl;
+        if (puzzle[puzzle[cell].row*9 + j].choice.size() == 0)
+          return false;
+      }
+
+      switch(puzzle[cell].area)
+      {
+        case 0:
+          if (puzzle[areaZero[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaZero[j]);
+          if (puzzle[areaZero[j]].choice.size() == 0)
+            return false;
+          break;
+        case 1:
+          if (puzzle[areaOne[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaOne[j]);
+          if (puzzle[areaOne[j]].choice.size() == 0)
+            return false;
+          break;
+        case 2:
+          if (puzzle[areaTwo[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaTwo[j]);
+          if (puzzle[areaTwo[j]].choice.size() == 0)
+            return false;
+          break;
+        case 3:
+          if (puzzle[areaThree[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaThree[j]);
+          if (puzzle[areaThree[j]].choice.size() == 0)
+            return false;
+          break;
+        case 4:
+          if (puzzle[areaFour[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaFour[j]);
+          if (puzzle[areaFour[j]].choice.size() == 0)
+            return false;
+          break;
+        case 5:
+          if (puzzle[areaFive[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaFive[j]);
+          if (puzzle[areaFive[j]].choice.size() == 0)
+            return false;
+          break;
+        case 6:
+          if (puzzle[areaSix[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaSix[j]);
+          if (puzzle[areaSix[j]].choice.size() == 0)
+            return false;
+          break;
+        case 7:
+          if (puzzle[areaSeven[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaSeven[j]);
+          if (puzzle[areaSeven[j]].choice.size() == 0)
+            return false;
+          break;
+        case 8:
+          if (puzzle[areaEight[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaEight[j]);
+          if (puzzle[areaEight[j]].choice.size() == 0)
+            return false;
+          break;
+      } 
+    }//for
+  
+    simp = findDecidableCell(puzzle);
+//cout << simp << endl;
+//printTable(puzzle);   
+//count++; 
+  } //while
+
+    if (emptyCell.size() != 0)
+      guess(puzzle);
+    else
+      return true;
 }
 
 void printTable(Table* puzzle)
