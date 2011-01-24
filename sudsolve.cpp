@@ -128,7 +128,7 @@ void read_input()
 void findSimplifications(Table* puzzle)
 {
   int i;
-  set<char>::iterator it;
+  set<int>::iterator it;
   char temp[81];
 
   for (i = 0; i < 81; i++)
@@ -136,8 +136,8 @@ void findSimplifications(Table* puzzle)
 
   while ((findDecidableCell(puzzle) == true) && emptyCell.size() != 0)
   {
-    for (i = 0; i < 81; i++)
-      setSeen(puzzle,i);
+    for (it = emptyCell.begin(); it != emptyCell.end(); it++)
+      setSeen(puzzle,*it);
   }
 
   if (emptyCell.size() != 0)
