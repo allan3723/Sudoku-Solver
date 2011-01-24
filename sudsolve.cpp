@@ -129,10 +129,9 @@ void findSimplifications(Table* puzzle)
 {
   int i;
   set<int>::iterator it;
-  char temp[81];
 
-  for (i = 0; i < 81; i++)
-    setSeen(puzzle, i);
+  for (it = emptyCell.begin(); it != emptyCell.end(); it++)
+    setSeen(puzzle, *it);
 
   while ((findDecidableCell(puzzle) == true) && emptyCell.size() != 0)
   {
@@ -529,7 +528,11 @@ void guess(Table* puzzle)
       for (j = 0; j < size2; j++)
         alternatives.push(puzzle[cells[j]]); //saves the affected cells
       puzzle[cell].num = array[i];  // fills current pos in the empty cell
-      if(guessCheck(puzzle, cell))  //tries to solve this guess
+
+      findSimplifications(puzzle);
+
+//      if(guessCheck(puzzle, cell))  //tries to solve this guess
+      if (emptyCell.size() == 0)
       {
         for (k = 0; k < 81; k++)
           cout << puzzle[k].num;
@@ -564,8 +567,9 @@ bool guessCheck(Table* puzzle, int cell)
 {
   int j, count = 0;
   bool simp = true;
+  set<int>::iterator it;
 
-  while (simp == true)
+/*  while (simp == true)
   {
 //cout << "count = " << count << endl;
     for (j = 0; j < 9; j++)
@@ -659,7 +663,7 @@ bool guessCheck(Table* puzzle, int cell)
 //printTable(puzzle);   
 //count++; 
   } //while
-
+*/
     if (emptyCell.size() != 0)
       guess(puzzle);
     else
