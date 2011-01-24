@@ -7,7 +7,7 @@ using namespace std;
 #include <cctype>
 #include <stdlib.h>
 #include <stdio.h>
-#include <list>
+#include <vector>
 
 class Table
 {
@@ -65,9 +65,14 @@ void read_input()
 
   for(i = 0; i < 81; i++) //check for error input
   {
-    if (!isdigit(inp[i]) && inp[i] != '.' && inp[i] == '0')
+    if ((!isdigit(inp[i]) && inp[i] != '.') || inp[i] == '0')
     {
-      cout << "ERROR: expected <value> got " << inp[i] << endl;
+      if (inp[i] == '\n')
+        cout << "ERROR: expected <value> got \\n" << endl;
+      else if (feof(stdin))
+        cout << "ERROR: expected <value> got <eof>" << endl;
+      else
+        cout << "ERROR: expected <value> got " << inp[i] << endl;
       exit(1);
     }
     
@@ -476,11 +481,10 @@ void guess(Table* puzzle)
 {
   set<int>::iterator it;
   stack <set<int> > empty;
-  list<Table*> test;
+  vector<Table*> test;
   set<char>::iterator cit;
   stack<Table> alternatives;
   int cell, size, i = 0, j, k = 0, size2;
-
   guessed = true;
 /*
   if (emptyCell.size() == 0 && !alternatives.empty()) //no alts, no cell to try anymore
@@ -521,9 +525,10 @@ void guess(Table* puzzle)
     for (i = 0; i < size; i++)      
     {
       empty.push(emptyCell);
-//      for (j = 0; j < 81; j++)
-//        alternatives.push(puzzle[j]); //saves the entire board
-      test.push_back(puzzle);
+
+      for (j = 0; j < size; j++)
+        alternatives.push(puzzle[array[j]]); //saves the entire board
+
       puzzle[cell].num = array[i];  // fills current pos in the empty cell
       findSimplifications(puzzle);  //tries to solve this guess
 
@@ -533,13 +538,12 @@ void guess(Table* puzzle)
           cout << puzzle[k].num;
         cout << endl;
       }
-//        for (j = 80; j >= 0; j--)
-//        {
-//          puzzle[j] = alternatives.top();
-//          alternatives.pop();
-//        }
-        puzzle = test.back();
-        test.pop_back(); 
+        for (j = size-1; j >= 0; j--)
+        {
+          puzzle[array[j]] = alternatives.top();
+          alternatives.pop();
+        }
+
         emptyCell = empty.top();
         empty.pop(); 
     } //for
