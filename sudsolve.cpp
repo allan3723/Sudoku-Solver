@@ -143,8 +143,9 @@ void findSimplifications(Table* puzzle)
 
 //  if (emptyCell.size() != 0)
 //    guess(puzzle);
-  else
-    if (!guessed && check(puzzle))
+//  else
+//    if (!guessed && check(puzzle))
+    if (emptyCell.empty())
       printTable(puzzle);
     
 }
