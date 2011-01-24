@@ -30,7 +30,7 @@ class Table
 set<int> emptyCell;
 bool solutionFound = false;
 bool guessed = false;
-int areaZero[] = {0, 1, 2, 9, 10, 11, 18, 19, 20}, //3x3 grid
+int areaZero[] = {0, 1, 2, 9, 10, 11, 18, 19, 20}, //3x3 grids
     areaOne[] = {3, 4, 5, 12, 13, 14, 21, 22, 23},
     areaTwo[] = {6, 7, 8, 15, 16, 17, 24, 25, 26},
     areaThree[] = {27, 28, 29, 36, 37, 38, 45, 46, 47},
@@ -530,9 +530,8 @@ void guess(Table* puzzle)
       puzzle[cell].num = array[i];  // fills current pos in the empty cell
       findSimplifications(puzzle);  //tries to solve this guess
 
-      if (check(puzzle))
+      if (emptyCell.size() == 0)
       {
-//cout << "got checked:" << "\t";
         for (k = 0; k < 81; k++)
           cout << puzzle[k].num;
         cout << endl;
