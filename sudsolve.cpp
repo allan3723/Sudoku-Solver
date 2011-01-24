@@ -52,6 +52,8 @@ bool guessCheck(Table* puzzle, int cell);
 int main()
 {
   read_input();
+  if (!solutionFound)
+    cout << "No solution!\n";
 }
 
 void read_input()
@@ -206,22 +208,22 @@ void setSeen(Table* puzzle, int i)
 
 bool findDecidableCell(Table* puzzle)
 {
-  int i;
+  set<int>::iterator i;
   set<char>::iterator it;
 
-  for (i = 0; i < 81; i++)
+  for (i = emptyCell.begin(); i != emptyCell.end(); i++)
   {
-    if (puzzle[i].choice.size() == 1) //hidden single
+    if (puzzle[*i].choice.size() == 1) //hidden single
     {
-      it = puzzle[i].choice.begin();
-      puzzle[i].num = *it;
-      puzzle[i].choice.clear();
-      emptyCell.erase(i);
+      it = puzzle[*i].choice.begin();
+      puzzle[*i].num = *it;
+      puzzle[*i].choice.clear();
+      emptyCell.erase(*i);
       return true;
     }
     else
-      if (puzzle[i].choice.size() > 1)
-        if(hiddenSingles(puzzle, i) == true)
+      if (puzzle[*i].choice.size() > 1)
+        if(hiddenSingles(puzzle, *i) == true)
           return true; 
   } //end for
 
@@ -506,7 +508,7 @@ void guess(Table* puzzle)
     k++;
   }
 
-  for (k = 0; k < size2; k++)
+  for (k = 0; k < size2; k++) 
   {
     cell = cells[k];
     size = puzzle[cell].choice.size();
@@ -532,11 +534,12 @@ void guess(Table* puzzle)
       findSimplifications(puzzle);
 
 //      if(guessCheck(puzzle, cell))  //tries to solve this guess
-      if (emptyCell.size() == 0)
+      if (emptyCell.size() == 0) //emptyCell.size() == 0)
       {
         for (k = 0; k < 81; k++)
           cout << puzzle[k].num;
         cout << endl;
+        solutionFound = true;
       }
 
       for (j = size2-1; j >= 0; j--)
@@ -555,12 +558,17 @@ void guess(Table* puzzle)
 
 bool check(Table* puzzle)
 {
-  int i;
-     
-  for (i = 0; i < 81; i++)
+//  int i;
+//  set<int>::iterator it;
+
+  if (emptyCell.size() == 0)
+    return true;
+  else
+    return false;
+/*  for (i = 0; i < 81; i++)
     if (puzzle[i].num == '.' && puzzle[i].choice.size() == 0)
-      return false;
-  return true;
+      return false; */
+//  return true;
 }
 
 bool guessCheck(Table* puzzle, int cell)
@@ -673,10 +681,8 @@ bool guessCheck(Table* puzzle, int cell)
 void printTable(Table* puzzle)
 {
   int i;
-  {
     for (i = 0; i < 81; i++)
       cout << puzzle[i].num;
   cout << endl;
-  } 
-  
+  solutionFound = true;
 }
