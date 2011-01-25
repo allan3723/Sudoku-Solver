@@ -7,6 +7,7 @@ using namespace std;
 #include <cctype>
 #include <stdlib.h>
 #include <stdio.h>
+#include <vector>
 
 class Table
 {
@@ -29,7 +30,6 @@ class Table
 set<int> emptyCell;
 bool solutionFound = false;
 bool guessed = false;
-int loop = 0;
 int areaZero[] = {0, 1, 2, 9, 10, 11, 18, 19, 20}, //3x3 grids
     areaOne[] = {3, 4, 5, 12, 13, 14, 21, 22, 23},
     areaTwo[] = {6, 7, 8, 15, 16, 17, 24, 25, 26},
@@ -47,10 +47,13 @@ bool hiddenSingles(Table* puzzle, int cell);
 void guess(Table* puzzle);
 bool check(Table* puzzle);
 void printTable(Table* puzzle);
+bool guessCheck(Table* puzzle, int cell);
 
 int main()
 {
   read_input();
+  if (!solutionFound)
+    cout << "No solution!\n";
 }
 
 void read_input()
@@ -65,9 +68,14 @@ void read_input()
 
   for(i = 0; i < 81; i++) //check for error input
   {
-    if (!isdigit(inp[i]) && inp[i] != '.' && inp[i] == '0')
+    if ((!isdigit(inp[i]) && inp[i] != '.') || inp[i] == '0')
     {
-      cout << "ERROR: expected <value> got " << inp[i] << endl;
+      if (inp[i] == '\n')
+        cout << "ERROR: expected <value> got \\n" << endl;
+      else if (feof(stdin))
+        cout << "ERROR: expected <value> got <eof>" << endl;
+      else
+        cout << "ERROR: expected <value> got " << inp[i] << endl;
       exit(1);
     }
     
@@ -121,13 +129,8 @@ void read_input()
 }
 void findSimplifications(Table* puzzle)
 {
+  int i;
   set<int>::iterator it;
-
-  if (loop == 1000)
-  {
-    cout << "No solutions!\n";
-    exit(1);
-  }
 
   for (it = emptyCell.begin(); it != emptyCell.end(); it++)
     setSeen(puzzle, *it);
@@ -138,12 +141,13 @@ void findSimplifications(Table* puzzle)
       setSeen(puzzle,*it);
   }
 
-  if (emptyCell.size() != 0)
-    guess(puzzle);
-  else
-    if (!guessed)
+//  if (emptyCell.size() != 0)
+//    guess(puzzle);
+//  else
+//    if (!guessed && check(puzzle))
+    if (emptyCell.empty())
       printTable(puzzle);
-   loop++; 
+    
 }
 
 void setSeen(Table* puzzle, int i)
@@ -205,24 +209,22 @@ void setSeen(Table* puzzle, int i)
 
 bool findDecidableCell(Table* puzzle)
 {
-//  set<int>::iterator i;
-  int i;
+  set<int>::iterator i;
   set<char>::iterator it;
 
-//  for (i = emptyCell.begin(); i != emptyCell.end(); i++)
-  for (i = 0; i < 81; i++)
+  for (i = emptyCell.begin(); i != emptyCell.end(); i++)
   {
-    if (puzzle[i].choice.size() == 1) //hidden single
+    if (puzzle[*i].choice.size() == 1) //hidden single
     {
-      it = puzzle[i].choice.begin();
-      puzzle[i].num = *it;
-      puzzle[i].choice.clear();
-      emptyCell.erase(i);
+      it = puzzle[*i].choice.begin();
+      puzzle[*i].num = *it;
+      puzzle[*i].choice.clear();
+      emptyCell.erase(*i);
       return true;
     }
     else
-      if (puzzle[i].choice.size() > 1)
-        if(hiddenSingles(puzzle, i) == true)
+      if (puzzle[*i].choice.size() > 1)
+        if(hiddenSingles(puzzle, *i) == true)
           return true; 
   } //end for
 
@@ -482,11 +484,12 @@ void guess(Table* puzzle)
 {
   set<int>::iterator it;
   stack <set<int> > empty;
+  vector<Table*> test;
   set<char>::iterator cit;
   stack<Table> alternatives;
   int cell, size, i = 0, j, k = 0, size2;
   guessed = true;
-
+/*
   if (emptyCell.size() == 0 && !alternatives.empty()) //no alts, no cell to try anymore
   {
     if (solutionFound = false) //didn't find any solutions at all
@@ -496,7 +499,7 @@ void guess(Table* puzzle)
     }
     return;
   }
-  
+ */ 
   size2 = emptyCell.size();
   int cells[size2];
 
@@ -506,17 +509,17 @@ void guess(Table* puzzle)
     k++;
   }
 
-  for (k = 0; k < size2; k++)
+  for (k = 0; k < size2; k++) 
   {
     cell = cells[k];
     size = puzzle[cell].choice.size();
     char array[size];
 
-    if (puzzle[cell].choice.size() == 0) //not a solution so return;
-      return;
+    if (puzzle[cell].choice.size() == 0) //not a solution so try next;
+      continue;
 
     emptyCell.erase(cell);     //since current cell will be filled, erase from list.
-    for (cit = puzzle[cell].choice.begin(); cit != puzzle[cell].choice.end(); cit++) //all poss of cell
+    for (cit = puzzle[cell].choice.begin(); cit != puzzle[cell].choice.end(); cit++) //all pos of cell
     { 
       array[i] = *cit;
       i++;
@@ -525,25 +528,29 @@ void guess(Table* puzzle)
     for (i = 0; i < size; i++)      
     {
       empty.push(emptyCell);
-      for (j = 0; j < 81; j++)
-        alternatives.push(puzzle[j]); //saves the entire board
+      for (j = 0; j < size2; j++)
+        alternatives.push(puzzle[cells[j]]); //saves the affected cells
       puzzle[cell].num = array[i];  // fills current pos in the empty cell
-      findSimplifications(puzzle);  //tries to solve this guess
 
-      if (emptyCell.empty())
+      findSimplifications(puzzle);
+
+//      if(guessCheck(puzzle, cell))  //tries to solve this guess
+      if (emptyCell.size() == 0) //emptyCell.size() == 0)
       {
         for (k = 0; k < 81; k++)
           cout << puzzle[k].num;
         cout << endl;
+        solutionFound = true;
       }
-        for (j = 80; j >= 0; j--)
-        {
-          puzzle[j] = alternatives.top();
-          alternatives.pop();
-        }
-        emptyCell = empty.top();
-        empty.pop(); 
-      loop++;
+
+      for (j = size2-1; j >= 0; j--)
+      {
+        puzzle[cells[j]] = alternatives.top();
+        alternatives.pop();
+      }
+
+      emptyCell = empty.top();
+      empty.pop(); 
     } //for
 
       emptyCell.insert(cell); //inserts back into empty list
@@ -552,21 +559,131 @@ void guess(Table* puzzle)
 
 bool check(Table* puzzle)
 {
-  int i;
-     
-  for (i = 0; i < 81; i++)
+//  int i;
+//  set<int>::iterator it;
+
+  if (emptyCell.size() == 0)
+    return true;
+  else
+    return false;
+/*  for (i = 0; i < 81; i++)
     if (puzzle[i].num == '.' && puzzle[i].choice.size() == 0)
-      return false;
-  return true;
+      return false; */
+//  return true;
+}
+
+bool guessCheck(Table* puzzle, int cell)
+{
+  int j, count = 0;
+  bool simp = true;
+  set<int>::iterator it;
+
+/*  while (simp == true)
+  {
+//cout << "count = " << count << endl;
+    for (j = 0; j < 9; j++)
+    {
+      if (puzzle[puzzle[cell].col + (j*9)].num == '.')
+      { 
+        setSeen(puzzle, puzzle[cell].col + (j*9));
+//cout << puzzle[cell].col + (j*9) << " - " << puzzle[puzzle[cell].col + (j*9)].choice.size() << endl;
+        if (puzzle[puzzle[cell].col + (j*9)].choice.size() == 0)
+          return false;
+      }
+
+      if (puzzle[puzzle[cell].row*9+j].num == '.')
+      {
+        setSeen(puzzle, puzzle[cell].row*9+j);
+//cout << puzzle[cell].row*9 + j << " - " << puzzle[puzzle[cell].row*9 + j].choice.size() << endl;
+        if (puzzle[puzzle[cell].row*9 + j].choice.size() == 0)
+          return false;
+      }
+
+      switch(puzzle[cell].area)
+      {
+        case 0:
+          if (puzzle[areaZero[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaZero[j]);
+          if (puzzle[areaZero[j]].choice.size() == 0)
+            return false;
+          break;
+        case 1:
+          if (puzzle[areaOne[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaOne[j]);
+          if (puzzle[areaOne[j]].choice.size() == 0)
+            return false;
+          break;
+        case 2:
+          if (puzzle[areaTwo[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaTwo[j]);
+          if (puzzle[areaTwo[j]].choice.size() == 0)
+            return false;
+          break;
+        case 3:
+          if (puzzle[areaThree[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaThree[j]);
+          if (puzzle[areaThree[j]].choice.size() == 0)
+            return false;
+          break;
+        case 4:
+          if (puzzle[areaFour[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaFour[j]);
+          if (puzzle[areaFour[j]].choice.size() == 0)
+            return false;
+          break;
+        case 5:
+          if (puzzle[areaFive[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaFive[j]);
+          if (puzzle[areaFive[j]].choice.size() == 0)
+            return false;
+          break;
+        case 6:
+          if (puzzle[areaSix[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaSix[j]);
+          if (puzzle[areaSix[j]].choice.size() == 0)
+            return false;
+          break;
+        case 7:
+          if (puzzle[areaSeven[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaSeven[j]);
+          if (puzzle[areaSeven[j]].choice.size() == 0)
+            return false;
+          break;
+        case 8:
+          if (puzzle[areaEight[j]].num != '.')
+            continue;
+          setSeen(puzzle, areaEight[j]);
+          if (puzzle[areaEight[j]].choice.size() == 0)
+            return false;
+          break;
+      } 
+    }//for
+  
+    simp = findDecidableCell(puzzle);
+//cout << simp << endl;
+//printTable(puzzle);   
+//count++; 
+  } //while
+*/
+    if (emptyCell.size() != 0)
+      guess(puzzle);
+    else
+      return true;
 }
 
 void printTable(Table* puzzle)
 {
   int i;
-  {
     for (i = 0; i < 81; i++)
       cout << puzzle[i].num;
   cout << endl;
-  } 
-  
+  solutionFound = true;
 }
